@@ -3,4 +3,6 @@ yelp_academic_dataset_checkin.json
 yelp_academic_dataset_review.json
 yelp_academic_dataset_tip.json
 yelp_academic_dataset_user.json
-mongo_creds.json
+creds.json
+aws_access_key.txt
+aws_secret.txt
