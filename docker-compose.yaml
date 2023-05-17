@@ -24,7 +24,7 @@ services:
       - 8896:8888
     volumes:
       - shared-workspace:/opt/workspace
-      - ./scripts:/opt/workspace/scripts
+      - ./notebooks:/opt/workspace/notebooks
     read_only: false
 
   spark-master:
