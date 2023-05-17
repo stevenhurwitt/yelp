@@ -3,4 +3,4 @@ boto3
 jupyter
 jupyterlab
 pyspark
-yaml
+pyyaml
