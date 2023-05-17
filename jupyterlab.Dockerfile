@@ -5,9 +5,9 @@ FROM cluster-base
 ARG spark_version=3.3.2
 ARG jupyterlab_version=3.5.2
 
-COPY ./scripts/ ${SHARED_WORKSPACE}/scripts/
-COPY ./creds.json ${SHARED_WORKSPACE}/scripts/creds.json
-COPY ./requirements.txt ${SHARED_WORKSPACE}/scripts/requirements.txt
+COPY ./notebooks/ ${SHARED_WORKSPACE}/notebooks/
+COPY ./creds.json ${SHARED_WORKSPACE}/notebooks/creds.json
+COPY ./requirements.txt ${SHARED_WORKSPACE}/notebooks/requirements.txt
 
 # base python
 RUN apt-get update -y && \
@@ -16,18 +16,18 @@ RUN apt-get update -y && \
     python3 -m pip install --upgrade pip
 
 # virtualenv
-RUN python3 -m venv /opt/workspace/reddit-env && \
-    source /opt/workspace/reddit-env/bin/activate
+RUN python3 -m venv /opt/workspace/yelp-env && \
+    source /opt/workspace/yelp-env/bin/activate
 
 # pyspark & jupyterlab
 RUN pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version}
 
 # requirements
-RUN pip3 install -r /opt/workspace/scripts/requirements.txt --ignore-installed
+RUN pip3 install -r /opt/workspace/notebooks/requirements.txt --ignore-installed
 
 
 # add kernel to jupyter
-RUN python3 -m ipykernel install --user --name="reddit-env"
+RUN python3 -m ipykernel install --user --name="yelp-env"
     
 # aws
 RUN rm -rf /var/lib/apt/lists/* && \
