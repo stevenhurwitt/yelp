@@ -25,6 +25,7 @@ RUN pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version}
 # requirements
 RUN pip3 install -r /opt/workspace/scripts/requirements.txt --ignore-installed
 
+
 # add kernel to jupyter
 RUN python3 -m ipykernel install --user --name="reddit-env"
     
