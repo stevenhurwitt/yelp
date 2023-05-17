@@ -1,6 +1,6 @@
 # platform: linux-64
-boto3==1.26.133
-jupyter==1.0.0
-jupyterlab==3.5.2
-pyspark==3.3.2
+boto3
+jupyter
+jupyterlab
+pyspark
 yaml
