@@ -12,7 +12,7 @@ volumes:
 services:
   jupyterlab:
     image: stevenhurwitt/jupyterlab:latest
-    container_name: jupyterlab
+    container_name: yelp/jupyterlab
     secrets:
       - aws_access_key_id
       - aws_secret_access_key
@@ -29,7 +29,7 @@ services:
 
   spark-master:
     image: stevenhurwitt/spark-master:latest
-    container_name: spark-master
+    container_name: yelp/spark-master
     hostname: spark-master
     ports:
       - 8080:8080
@@ -40,7 +40,7 @@ services:
 
   spark-worker-1:
     image: stevenhurwitt/spark-worker:latest
-    container_name: spark-worker-1
+    container_name: yelp/spark-worker-1
     environment:
       - SPARK_WORKER_CORES=4
       - SPARK_WORKER_MEMORY=8192m
@@ -55,7 +55,7 @@ services:
 
   spark-worker-2:
     image: stevenhurwitt/spark-worker:latest
-    container_name: spark-worker-2
+    container_name: yelp/spark-worker-2
     environment:
       - SPARK_WORKER_CORES=4
       - SPARK_WORKER_MEMORY=8192m
@@ -70,7 +70,7 @@ services:
 
   postgres:
     image: postgres
-    container_name: postgres
+    container_name: yelp/postgres
     hostname: postgres
     ports: 
       - "5433:5432"
