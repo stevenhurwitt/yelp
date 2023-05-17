@@ -5,7 +5,7 @@ FROM cluster-base
 ARG spark_version=3.3.2
 ARG jupyterlab_version=3.5.2
 
-COPY ./notebooks/ ${SHARED_WORKSPACE}/notebooks/
+COPY ./notebooks/ ${SHARED_WORKSPACE}/
 COPY ./creds.json ${SHARED_WORKSPACE}/notebooks/creds.json
 COPY ./requirements.txt ${SHARED_WORKSPACE}/notebooks/requirements.txt
 
