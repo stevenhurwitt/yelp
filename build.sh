@@ -19,10 +19,6 @@ JUPYTERLAB_VERSION="3.5.2"
 #   -t stevenhurwitt/maven:latest .
 
 docker build \
-  -f glue_history.Dockerfile \
-  -t stevenhurwitt/glue_history:latest .
-
-docker build \
   -f cluster-base.Dockerfile \
   -t stevenhurwitt/cluster-base:latest .
 

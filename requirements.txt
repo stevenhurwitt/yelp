@@ -1,0 +1,6 @@
+# platform: linux-64
+boto3
+jupyter
+jupyterlab
+pyspark
+pyyaml
