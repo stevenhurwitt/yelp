@@ -51,15 +51,35 @@ if __name__ == "__main__":
     filenames = [f"raw/yelp_academic_dataset_{file}.json" for file in files]
     pp.pprint(filenames)
 
-    business_file = read_json("raw/yelp_academic_dataset_business.json")
-    checkin_file = read_json("raw/yelp_academic_dataset_checkin.json")
-    review_file = read_json("raw/yelp_academic_dataset_review.json")
-    tip_file = read_json("raw/yelp_academic_dataset_tip.json")
-    user_file = read_json("raw/yelp_academic_dataset_user.json")
+    business_file = read_json(filenames[0])
+    checkin_file = read_json(filenames[1])
+    review_file = read_json(filenames[2])
+    tip_file = read_json(filenames[3])
+    user_file = read_json(filenames[4])
 
     print("read json files from s3.")
 
     pp.pprint(checkin_file[3])
 
+    def create_df(json_file):
+        """
+        creates a spark dataframe from a yelp .json file.
 
+        keyword arguments:
+        json_file - yelp .json file (json)
 
+        returns: df (spark dataframe)
+        """
+
+        df = spark.createDataFrame(json_file)
+        return(df)
+
+    business_df = create_df(business_file)
+    checkin_df = create_df(checkin_file)
+    review_df = create_df(review_file)
+    tip_df = create_df(tip_file)
+    user_df = create_df(user_file)
+
+    logger.info("created dataframes from json")
+
+    logger.info(business_df.printSchema())
