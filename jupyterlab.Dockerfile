@@ -1,4 +1,4 @@
-FROM cluster-base
+FROM stevenhurwitt/cluster-base
 
 # -- Layer: JupyterLab
 
@@ -11,8 +11,8 @@ COPY ./requirements.txt ${SHARED_WORKSPACE}/notebooks/requirements.txt
 
 # base python
 RUN apt-get update -y && \
-    apt-get install -y python3-dev python3-distutils python3-setuptools python3-venv && \
-    curl https://bootstrap.pypa.io./get-pip.py | python3 && \
+    apt-get install -y python3-dev python3-distutils python3-setuptools python3-venv
+RUN curl https://bootstrap.pypa.io./get-pip.py | python3 && \
     python3 -m pip install --upgrade pip
 
 # virtualenv
