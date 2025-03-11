@@ -12,22 +12,22 @@ COPY ./requirements.txt ${SHARED_WORKSPACE}/notebooks/requirements.txt
 # base python
 RUN apt-get update -y && \
     apt-get install -y python3-dev python3-distutils python3-setuptools python3-venv
-RUN curl https://bootstrap.pypa.io./get-pip.py | python3 && \
-    python3 -m pip install --upgrade pip
+# RUN curl https://bootstrap.pypa.io./get-pip.py | python3
+# RUN python3 -m pip install --upgrade pip
 
 # virtualenv
 RUN python3 -m venv /opt/workspace/yelp-env && \
     source /opt/workspace/yelp-env/bin/activate
 
 # pyspark & jupyterlab
-RUN pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version}
+# RUN pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version}
 
 # requirements
-RUN pip3 install -r /opt/workspace/notebooks/requirements.txt --ignore-installed
+# RUN pip3 install -r /opt/workspace/notebooks/requirements.txt --ignore-installed
 
 
 # add kernel to jupyter
-RUN python3 -m ipykernel install --user --name="yelp-env"
+# RUN python3 -m ipykernel install --user --name="yelp-env"
     
 # aws
 RUN rm -rf /var/lib/apt/lists/* && \
