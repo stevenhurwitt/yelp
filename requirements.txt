@@ -1,5 +1,6 @@
 # platform: linux-64
 boto3
+ipykernel
 jupyter
 jupyterlab
 pyspark
