@@ -5,7 +5,7 @@ FROM cluster-base
 ARG spark_version=3.4.4
 ARG jupyterlab_version=3.2.0
 
-COPY requirements.txt /opt/worksapce/requirements.txt
+COPY ./requirements.txt /opt/worksapce/requirements.txt
 
 RUN apt-get update -y && \
     apt-get install -y python3-venv && \
@@ -16,7 +16,7 @@ RUN apt-get update -y && \
     pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version} && \
 	pip3 install wget && \
     pip3 install numpy && pip3 install pandas && pip3 install matplotlib && \
-    pip3 install -r requirements.txt
+    pip3 install -r /opt/workspace/requirements.txt
     # rm -rf /var/lib/apt/lists/* && \
     # ln -s /usr/local/bin/python3 /usr/bin/python
 
