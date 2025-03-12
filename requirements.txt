@@ -3,5 +3,5 @@ boto3
 ipykernel
 jupyter
 jupyterlab
-pyspark
+pyspark==3.4.4
 pyyaml
