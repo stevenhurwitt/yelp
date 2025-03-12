@@ -10,6 +10,7 @@ COPY ./requirements.txt /opt/worksapce/requirements.txt
 RUN apt-get update -y && \
     apt-get install -y python3-venv && \
     apt-get install -y python3-pip && \
+    apt-get install libpq-dev && \
     python3 -m venv venv && \
     pip3 install --upgrade pip && \
 	pip3 install pypandoc==1.5 && \
