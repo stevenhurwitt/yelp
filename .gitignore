@@ -4,6 +4,8 @@ aws_secret.txt
 archive/*
 aws/*
 awscliv2.zip
+notebooks/creds.json
+scripts/creds.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/spark,jupyternotebooks,pycharm,pycharm+iml,pycharm+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=spark,jupyternotebooks,pycharm,pycharm+iml,pycharm+all
