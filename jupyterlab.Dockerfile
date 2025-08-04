@@ -7,6 +7,7 @@ ARG jupyterlab_version=3.2.0
 
 COPY ./requirements.txt /opt/workspace/requirements.txt
 COPY ./creds.json /opt/workspace/creds.json
+COPY . /opt/workspace/
 
 RUN apt-get update -y && \
     apt-get install -y python3-venv && \
