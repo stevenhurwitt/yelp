@@ -138,7 +138,7 @@ def read_json(path: str, schema: StructType) -> DataFrame:
         DataFrame: Spark DataFrame containing the JSON data.
     """
     try:
-        df = spark.read.json(path, schema=schema, multiLine=True)
+        df = spark.read.json(path, schema=schema, multiLine=False)
         print(f"Successfully read JSON file from: {path}")
         print(f"Number of rows: {df.count()}")
         return df
