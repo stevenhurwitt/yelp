@@ -57,105 +57,39 @@ try:
 except Exception as e:
     print(str(e))
 
-
-# Schemas for yelp json datasets
-business_schema = StructType([
-    StructField("business_id", StringType(), True),
-    StructField("name", StringType(), True),
-    StructField("address", StringType(), True),
-    StructField("city", StringType(), True),
-    StructField("state", StringType(), True),
-    StructField("postal_code", StringType(), True),
-    StructField("latitude", DoubleType(), True),
-    StructField("longitude", DoubleType(), True),
-    StructField("stars", DoubleType(), True),
-    StructField("review_count", IntegerType(), True),
-    StructField("is_open", IntegerType(), True),
-    StructField("attributes", MapType(StringType(), StringType()), True),
-    StructField("categories", StringType(), True),
-    StructField("hours", MapType(StringType(), StringType()), True)
-])
-
-users_schema = StructType([
-    StructField("user_id", StringType(), True),
-    StructField("name", StringType(), True),
-    StructField("review_count", IntegerType(), True),
-    StructField("yelping_since", StringType(), True),
-    StructField("useful", IntegerType(), True),
-    StructField("funny", IntegerType(), True),
-    StructField("cool", IntegerType(), True),
-    StructField("elite", StringType(), True),
-    StructField("friends", StringType(), True),
-    StructField("fans", IntegerType(), True),
-    StructField("average_stars", DoubleType(), True),
-    StructField("compliment_hot", IntegerType(), True),
-    StructField("compliment_more", IntegerType(), True),
-    StructField("compliment_profile", IntegerType(), True),
-    StructField("compliment_cute", IntegerType(), True),
-    StructField("compliment_list", IntegerType(), True),
-    StructField("compliment_note", IntegerType(), True),
-    StructField("compliment_plain", IntegerType(), True),
-    StructField("compliment_cool", IntegerType(), True),
-    StructField("compliment_funny", IntegerType(), True),
-    StructField("compliment_writer", IntegerType(), True),
-    StructField("compliment_photos", IntegerType(), True)
-])
-
-checkins_schema = StructType([
-    StructField("business_id", StringType(), True),
-    StructField("date", StringType(), True)
-])
-
-reviews_schema = StructType([
-    StructField("review_id", StringType(), True),
-    StructField("user_id", StringType(), True),
-    StructField("business_id", StringType(), True),
-    StructField("stars", DoubleType(), True),
-    StructField("useful", IntegerType(), True),
-    StructField("funny", IntegerType(), True),
-    StructField("cool", IntegerType(), True),
-    StructField("text", StringType(), True),
-    StructField("date", StringType(), True)
-])
-
-tips_schema = StructType([
-    StructField("user_id", StringType(), True),
-    StructField("business_id", StringType(), True),
-    StructField("text", StringType(), True),
-    StructField("date", StringType(), True),
-    StructField("compliment_count", IntegerType(), True)
-])
-
-def read_json(path: str, schema: StructType) -> DataFrame:
+def read_delta(path: str) -> DataFrame:
     """
-    Read a JSON file from S3 path with a specified schema.
+    Read a Delta table from S3 path
     
     Args:
-        path (str): S3 path to JSON file.
-        schema (StructType): Spark DataFrame schema.
+        path (str): S3 path to delta table
         
     Returns:
-        DataFrame: Spark DataFrame containing the JSON data.
+        DataFrame: Spark DataFrame containing the delta table data
     """
     try:
-        df = spark.read.json(path, schema=schema, multiLine=False)
-        print(f"Successfully read JSON file from: {path}")
+        df = spark.read \
+            .format("delta") \
+            .option("inferSchema", "true") \
+            .load(path)
+            
+        print(f"Successfully read delta table from: {path}")
         print(f"Number of rows: {df.count()}")
         return df
+        
     except Exception as e:
-        print(f"Error reading JSON file from {path}")
+        print(f"Error reading delta table from {path}")
         print(f"Error: {str(e)}")
         return None
     
-# Example usage:
 bucket = "yelp-stevenhurwitt-2"
 
-# Read all json files
-business_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_business.json", business_schema)
-checkin_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_checkin.json", checkins_schema)
-review_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_review.json", reviews_schema)
-tip_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_tip.json", tips_schema)
-user_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_user.json", users_schema)
+# Read all delta tables
+business_file = read_delta(f"s3a://{bucket}/business")
+checkin_file = read_delta(f"s3a://{bucket}/checkins")
+review_file = read_delta(f"s3a://{bucket}/reviews")
+tip_file = read_delta(f"s3a://{bucket}/tips")
+user_file = read_delta(f"s3a://{bucket}/users")
 
 # Verify data loaded successfully
 for df, name in [(business_file, "business"), 
@@ -167,9 +101,205 @@ for df, name in [(business_file, "business"),
         print(f"\n{name} table schema:")
         df.printSchema()
 
-# Business data
-print("business data: ")
-business_file.show(20)
+# Create temporary views to enable Spark SQL queries
+review_file.createOrReplaceTempView("reviews")
+user_file.createOrReplaceTempView("users")
+business_file.createOrReplaceTempView("business")
+
+# Execute the join using Spark SQL on the views
+df_reviews_join = spark.sql("""
+    SELECT 
+        r.*,
+        u.name as user_name,
+        b.name as business_name
+    FROM reviews r
+    LEFT JOIN users u ON r.user_id = u.user_id 
+    LEFT JOIN business b ON r.business_id = b.business_id
+""")
+
+df_reviews_join.show(20)
+
+# tips
+tip_file.show(20)
+
+tip_file.groupBy("year").count().orderBy("year").show()
+
+# Create temporary views for the DataFrames
+business_file.createOrReplaceTempView("business")
+checkin_file.createOrReplaceTempView("checkins")
+
+# Perform the join using Spark SQL
+joined_df = spark.sql("""
+    SELECT 
+        b.name as business_name,
+        b.business_id,
+        c.date as checkin_date
+    FROM business b
+    INNER JOIN checkins c 
+        ON b.business_id = c.business_id
+    ORDER BY b.name, c.date
+""")
+
+# Show results
+print("Number of joined records:", joined_df.count())
+joined_df.show(20, truncate=False)
+
+# table counts
+# Create temporary views for the DataFrames
+business_file.createOrReplaceTempView("business")
+user_file.createOrReplaceTempView("users")
+checkin_file.createOrReplaceTempView("checkins")
+review_file.createOrReplaceTempView("reviews")
+tip_file.createOrReplaceTempView("tips")
+
+# Execute the count query using Spark SQL
+df_counts = spark.sql("""
+    SELECT 'business' as table_name, COUNT(*) as count FROM business
+    UNION ALL
+    SELECT 'users' as table_name, COUNT(*) as count FROM users
+    UNION ALL
+    SELECT 'checkins' as table_name, COUNT(*) as count FROM checkins
+    UNION ALL
+    SELECT 'reviews' as table_name, COUNT(*) as count FROM reviews
+    UNION ALL
+    SELECT 'tips' as table_name, COUNT(*) as count FROM tips
+    ORDER BY table_name
+""")
+
+df_counts.show()
+
+# Create a query to find top restaurants in Virginia
+top_restaurants = spark.sql("""
+    SELECT 
+        name,
+        address,
+        city,
+        state,
+        ROUND(stars, 2) as average_stars,
+        review_count,
+        categories
+    FROM business
+    WHERE categories LIKE '%Restaurants%'
+    ORDER BY stars DESC, review_count DESC
+""")
+
+# Display results in a cleaner format
+top_restaurants.show(25, truncate=False)
+
+top_restaurants.groupBy("state").count().orderBy("state").show()
+
+# # Schemas for yelp json datasets
+# business_schema = StructType([
+#     StructField("business_id", StringType(), True),
+#     StructField("name", StringType(), True),
+#     StructField("address", StringType(), True),
+#     StructField("city", StringType(), True),
+#     StructField("state", StringType(), True),
+#     StructField("postal_code", StringType(), True),
+#     StructField("latitude", DoubleType(), True),
+#     StructField("longitude", DoubleType(), True),
+#     StructField("stars", DoubleType(), True),
+#     StructField("review_count", IntegerType(), True),
+#     StructField("is_open", IntegerType(), True),
+#     StructField("attributes", MapType(StringType(), StringType()), True),
+#     StructField("categories", StringType(), True),
+#     StructField("hours", MapType(StringType(), StringType()), True)
+# ])
+
+# users_schema = StructType([
+#     StructField("user_id", StringType(), True),
+#     StructField("name", StringType(), True),
+#     StructField("review_count", IntegerType(), True),
+#     StructField("yelping_since", StringType(), True),
+#     StructField("useful", IntegerType(), True),
+#     StructField("funny", IntegerType(), True),
+#     StructField("cool", IntegerType(), True),
+#     StructField("elite", StringType(), True),
+#     StructField("friends", StringType(), True),
+#     StructField("fans", IntegerType(), True),
+#     StructField("average_stars", DoubleType(), True),
+#     StructField("compliment_hot", IntegerType(), True),
+#     StructField("compliment_more", IntegerType(), True),
+#     StructField("compliment_profile", IntegerType(), True),
+#     StructField("compliment_cute", IntegerType(), True),
+#     StructField("compliment_list", IntegerType(), True),
+#     StructField("compliment_note", IntegerType(), True),
+#     StructField("compliment_plain", IntegerType(), True),
+#     StructField("compliment_cool", IntegerType(), True),
+#     StructField("compliment_funny", IntegerType(), True),
+#     StructField("compliment_writer", IntegerType(), True),
+#     StructField("compliment_photos", IntegerType(), True)
+# ])
+
+# checkins_schema = StructType([
+#     StructField("business_id", StringType(), True),
+#     StructField("date", StringType(), True)
+# ])
+
+# reviews_schema = StructType([
+#     StructField("review_id", StringType(), True),
+#     StructField("user_id", StringType(), True),
+#     StructField("business_id", StringType(), True),
+#     StructField("stars", DoubleType(), True),
+#     StructField("useful", IntegerType(), True),
+#     StructField("funny", IntegerType(), True),
+#     StructField("cool", IntegerType(), True),
+#     StructField("text", StringType(), True),
+#     StructField("date", StringType(), True)
+# ])
+
+# tips_schema = StructType([
+#     StructField("user_id", StringType(), True),
+#     StructField("business_id", StringType(), True),
+#     StructField("text", StringType(), True),
+#     StructField("date", StringType(), True),
+#     StructField("compliment_count", IntegerType(), True)
+# ])
+
+# def read_json(path: str, schema: StructType) -> DataFrame:
+#     """
+#     Read a JSON file from S3 path with a specified schema.
+    
+#     Args:
+#         path (str): S3 path to JSON file.
+#         schema (StructType): Spark DataFrame schema.
+        
+#     Returns:
+#         DataFrame: Spark DataFrame containing the JSON data.
+#     """
+#     try:
+#         df = spark.read.json(path, schema=schema, multiLine=False)
+#         print(f"Successfully read JSON file from: {path}")
+#         print(f"Number of rows: {df.count()}")
+#         return df
+#     except Exception as e:
+#         print(f"Error reading JSON file from {path}")
+#         print(f"Error: {str(e)}")
+#         return None
+    
+# # Example usage:
+# bucket = "yelp-stevenhurwitt-2"
+
+# # Read all json files
+# business_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_business.json", business_schema)
+# checkin_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_checkin.json", checkins_schema)
+# review_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_review.json", reviews_schema)
+# tip_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_tip.json", tips_schema)
+# user_file = read_json(f"s3a://{bucket}/yelp_academic_dataset_user.json", users_schema)
+
+# # Verify data loaded successfully
+# for df, name in [(business_file, "business"), 
+#                  (checkin_file, "checkins"),
+#                  (review_file, "reviews"),
+#                  (tip_file, "tips"),
+#                  (user_file, "users")]:
+#     if df is not None:
+#         print(f"\n{name} table schema:")
+#         df.printSchema()
+
+# # Business data
+# print("business data: ")
+# business_file.show(20)
 
 # from pyspark.sql import DataFrame
 # import psycopg2
