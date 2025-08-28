@@ -3,7 +3,14 @@ boto3
 ipykernel
 jupyter
 jupyterlab
+matplotlib
+nltk
+numpy
+pandas
 psycopg2
 pyspark==3.4.4
 pyyaml
 seaborn
+scikit-learn
+seaborn
+torch
